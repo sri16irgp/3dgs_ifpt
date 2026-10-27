@@ -1,0 +1,33 @@
+*.pyc
+.vscode
+output
+build
+diff_rasterization/diff_rast.egg-info
+diff_rasterization/dist
+tensorboard_3d
+screenshots
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Training outputs
+output/
+data/
+datasets/
+*.pth
+*.pt
+*.ckpt
+
+# Large Gaussian files
+*.ply
+
+# Build files
+build/
+SIBR_viewers/build/
+SIBR_viewers/install/
+
+# System files
+.DS_Store

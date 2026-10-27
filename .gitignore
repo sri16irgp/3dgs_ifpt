@@ -1,0 +1,109 @@
+# Datasets and training results
+gaussian-splatting/data/
+gaussian-splatting/output/
+gaussian-splatting/plant.MOV
+gaussian-splatting/mug.mov
+
+# Python / CUDA generated files
+__pycache__/
+*.pyc
+*.so
+*.o
+*.a
+*.egg-info/
+
+# Build directories
+**/build/
+**/install/
+
+# Virtual environments
+.venv/
+venv/
+
+# Generated checkpoints and point clouds
+*.pth
+*.pt
+*.ckpt
+*.ply
+
+# Large generated visualization assets
+gaussian-splatting/assets/top_view_open.gif
+gaussian-splatting/assets/top_view_image_alpha.gif
+
+# =========================
+# Datasets and input images
+# =========================
+**/data/
+**/datasets/
+**/images/
+**/images_2/
+**/images_4/
+**/images_8/
+**/input/
+
+# =========================
+# Rendered images and outputs
+# =========================
+**/output/
+**/outputs/
+**/renders/
+**/rendered/
+**/rendered_images/
+**/train/
+**/test/
+
+# =========================
+# Videos
+# =========================
+*.MOV
+*.mov
+*.mp4
+*.avi
+*.mkv
+
+# =========================
+# Images
+# =========================
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.tif
+*.tiff
+*.bmp
+*.gif
+
+# =========================
+# Gaussian models / checkpoints
+# =========================
+*.ply
+*.pth
+*.pt
+*.ckpt
+
+# =========================
+# COLMAP databases
+# =========================
+*.db
+
+# =========================
+# Python / CUDA compiled files
+# =========================
+__pycache__/
+*.pyc
+*.so
+*.o
+*.a
+*.egg-info/
+
+# =========================
+# Build files
+# =========================
+**/build/
+**/install/
+
+# =========================
+# Virtual environments
+# =========================
+.venv/
+venv/
