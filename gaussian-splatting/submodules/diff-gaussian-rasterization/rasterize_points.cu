@@ -242,3 +242,66 @@ torch::Tensor markVisible(
   
   return present;
 }
+
+
+#include "cuda_rasterizer/rasterizer_impl.h"
+#include <c10/cuda/CUDAGuard.h>
+#include <c10/cuda/CUDAException.h>
+#include <c10/cuda/CUDAStream.h>
+
+// Replay compositing without colors, keeping argmax(alpha * transmittance).
+// The acceptance tests and early exit deliberately match FORWARD::render.
+__global__ void contributorCUDA(const uint2* ranges, const uint32_t* ids,
+    const float2* means, const float4* conics, int width, int height,
+    int* result, float* weights)
+{
+    int x = blockIdx.x * BLOCK_X + threadIdx.x;
+    int y = blockIdx.y * BLOCK_Y + threadIdx.y;
+    if (x >= width || y >= height) return;
+    uint2 range = ranges[blockIdx.y * gridDim.x + blockIdx.x];
+    float T = 1.f, best = 0.f;
+    int winner = -1;
+    for (uint32_t k = range.x; k < range.y; ++k) {
+        uint32_t id = ids[k];
+        float2 mean = means[id];
+        float4 c = conics[id];
+        float dx = mean.x - x, dy = mean.y - y;
+        float power = -0.5f * (c.x * dx * dx + c.z * dy * dy) - c.y * dx * dy;
+        if (power > 0.f) continue;
+        float alpha = fminf(0.99f, c.w * expf(power));
+        if (alpha < 1.f / 255.f) continue;
+        float next = T * (1.f - alpha);
+        if (next < 0.0001f) break;
+        float weight = alpha * T;
+        if (weight > best) { best = weight; winner = id; }
+        T = next;
+    }
+    result[y * width + x] = winner;
+    weights[y * width + x] = best;
+}
+
+std::tuple<torch::Tensor, torch::Tensor> GaussianContributorsCUDA(
+    const torch::Tensor& geometry, const torch::Tensor& binning,
+    const torch::Tensor& image, int count, int rendered, int height, int width)
+{
+    TORCH_CHECK(geometry.is_cuda() && binning.is_cuda() && image.is_cuda(), "CUDA buffers required");
+    TORCH_CHECK(geometry.is_contiguous() && binning.is_contiguous() && image.is_contiguous(), "Contiguous buffers required");
+    TORCH_CHECK(count >= 0 && rendered >= 0 && height > 0 && width > 0, "Invalid dimensions");
+    c10::cuda::CUDAGuard guard(geometry.device());
+    auto ids = torch::full({height, width}, -1, geometry.options().dtype(torch::kInt32));
+    auto weights = torch::zeros({height, width}, geometry.options().dtype(torch::kFloat32));
+    if (count && rendered) {
+        char* g = reinterpret_cast<char*>(geometry.data_ptr());
+        char* b = reinterpret_cast<char*>(binning.data_ptr());
+        char* i = reinterpret_cast<char*>(image.data_ptr());
+        auto gs = CudaRasterizer::GeometryState::fromChunk(g, count);
+        auto bs = CudaRasterizer::BinningState::fromChunk(b, rendered);
+        auto is = CudaRasterizer::ImageState::fromChunk(i, height * width);
+        contributorCUDA<<<dim3((width + BLOCK_X - 1) / BLOCK_X, (height + BLOCK_Y - 1) / BLOCK_Y),
+            dim3(BLOCK_X, BLOCK_Y), 0, c10::cuda::getCurrentCUDAStream()>>>(
+            is.ranges, bs.point_list, gs.means2D, gs.conic_opacity,
+            width, height, ids.data_ptr<int>(), weights.data_ptr<float>());
+        C10_CUDA_KERNEL_LAUNCH_CHECK();
+    }
+    return std::make_tuple(ids, weights);
+}

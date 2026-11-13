@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LBG Viewer</title>
+  <link rel="stylesheet" href="/style.css?v=20261105-2">
+</head>
+<body>
+  <main>
+    <section class="viewer-column">
+      <div id="viewport" aria-label="Interactive Gaussian scene">
+        <img id="frame" alt="Rendered Gaussian scene" draggable="false">
+        <div id="busy">Loading scene…</div>
+        <div id="stats">Waiting for first frame</div>
+        <div id="hint">Drag to orbit · Right drag to pan · Scroll to zoom</div>
+      </div>
+      <div class="scene-file"><span id="scene-name">Scene viewer</span><span class="file-type">.ply</span></div>
+    </section>
+    <aside>
+      <form id="search-form"><label for="prompt">Text prompt</label><div class="search-row"><input id="prompt" type="text" maxlength="512" placeholder="e.g. a garden chair" required><button id="search" type="submit">Search</button></div></form>
+      <div id="status" role="status">Loading scene…</div>
+      <section id="selection" hidden><div class="eyebrow">TOP MATCH</div><h2 id="object-id"></h2><div class="facts"><span id="count"></span><span id="score"></span></div></section>
+      <div class="actions"><button id="isolate" type="button" disabled>Isolate</button><button id="focus" type="button" disabled>Focus selected</button><button id="clear" type="button" disabled>Clear selection</button><button id="reset" type="button">Reset camera</button><a id="download" class="button disabled" aria-disabled="true">Download PLY</a></div>
+    </aside>
+  </main>
+  <script src="/app.js?v=20261105-2" defer></script>
+</body>
+</html>

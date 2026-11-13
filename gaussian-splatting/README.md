@@ -613,3 +613,11 @@ pip install submodules\simple-knn
 - *Wait, but ```<insert feature>``` isn't optimized and could be much better?* There are several parts we didn't even have time to think about improving (yet). The performance you get with this prototype is probably a rather slow baseline for what is physically possible.
 
 - *Something is broken, how did this happen?* We tried hard to provide a solid and comprehensible basis to make use of the paper's method. We have refactored the code quite a bit, but we have limited capacity to test all possible usage scenarios. Thus, if part of the website, the code or the performance is lacking, please create an issue. If we find the time, we will do our best to address it.
+
+## Training-free instance segmentation (Lifting by Gaussians)
+
+`lbg.py` adds SAM/CLIP/DINOv2 mask lifting, multi-view object/part/subpart fusion,
+optional cleanup, text queries, segmentation previews, and Gaussian PLY asset
+export on existing trained checkpoints. See [setup, usage, and implementation
+choices](docs/lbg.md). This is an independent implementation of the LBG method;
+the original reconstruction training workflow is unchanged.

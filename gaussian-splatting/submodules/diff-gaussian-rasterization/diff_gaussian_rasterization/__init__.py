@@ -206,3 +206,37 @@ class GaussianRasterizer(nn.Module):
             raster_settings, 
         )
 
+
+
+@torch.no_grad()
+def rasterize_contributors(means3D, opacities, scales, rotations, raster_settings,
+                           cov3D_precomp=None):
+    """Return HxW int32 Gaussian IDs (-1 for background) and alpha*T weights.
+
+    Inference only. Rebuild the local extension after updating its source.
+    """
+    if not hasattr(_C, "gaussian_contributors"):
+        raise RuntimeError("LBG needs the rebuilt local diff-gaussian-rasterization extension")
+    s = raster_settings
+    empty = means3D.new_empty(0)
+    colors = means3D.new_zeros((len(means3D), 3))
+    if cov3D_precomp is None:
+        cov3D_precomp = empty
+    else:
+        scales = rotations = empty
+    # The upstream extension launches on the default stream. Keep both passes
+    # there so callers using another stream also receive a completed result.
+    device = means3D.device
+    with torch.cuda.device(device):
+        torch.cuda.synchronize(device)
+        with torch.cuda.stream(torch.cuda.default_stream(device)):
+            result = _C.rasterize_gaussians(
+                s.bg, means3D, colors, opacities, scales, rotations,
+                s.scale_modifier, cov3D_precomp, s.viewmatrix, s.projmatrix,
+                s.tanfovx, s.tanfovy, s.image_height, s.image_width,
+                empty, 0, s.campos, s.prefiltered, s.antialiasing, s.debug)
+            rendered, _, _, geometry, binning, image, _ = result
+            output = _C.gaussian_contributors(geometry, binning, image,
+                len(means3D), rendered, s.image_height, s.image_width)
+        torch.cuda.synchronize(device)
+    return output

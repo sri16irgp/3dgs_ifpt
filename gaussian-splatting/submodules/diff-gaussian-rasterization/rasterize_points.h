@@ -69,3 +69,8 @@ torch::Tensor markVisible(
 		torch::Tensor& means3D,
 		torch::Tensor& viewmatrix,
 		torch::Tensor& projmatrix);
+
+// Inference-only lookup using the exact forward rasterization buffers.
+std::tuple<torch::Tensor, torch::Tensor> GaussianContributorsCUDA(
+    const torch::Tensor& geometry, const torch::Tensor& binning,
+    const torch::Tensor& image, int count, int rendered, int height, int width);

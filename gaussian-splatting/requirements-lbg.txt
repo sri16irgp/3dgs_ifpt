@@ -1,0 +1,13 @@
+# Install in a working CUDA Gaussian Splatting environment (Python >= 3.10).
+# Keep the CUDA-compatible torch/torchvision already installed for this repo.
+segment-anything==1.0
+open_clip_torch==3.3.0
+scipy>=1.10
+numpy>=1.24
+Pillow>=9
+plyfile>=1.0
+pytest>=7
+fastapi>=0.100
+uvicorn[standard]>=0.23
+# DINOv2 source/weights load through Torch Hub; --dino-repo accepts a pinned ref
+# or local checkout. See docs/lbg.md for reproducibility and offline use.

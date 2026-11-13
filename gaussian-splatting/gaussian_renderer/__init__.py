@@ -126,3 +126,23 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         }
     
     return out
+
+
+@torch.no_grad()
+def render_contributors(viewpoint_camera, pc, pipe, scaling_modifier=1.0):
+    """LBG pixel-to-Gaussian mapping; does not allocate autograd state."""
+    from diff_gaussian_rasterization import rasterize_contributors
+    settings = GaussianRasterizationSettings(
+        image_height=int(viewpoint_camera.image_height),
+        image_width=int(viewpoint_camera.image_width),
+        tanfovx=math.tan(viewpoint_camera.FoVx * 0.5),
+        tanfovy=math.tan(viewpoint_camera.FoVy * 0.5),
+        bg=pc.get_xyz.new_zeros(3), scale_modifier=scaling_modifier,
+        viewmatrix=viewpoint_camera.world_view_transform,
+        projmatrix=viewpoint_camera.full_proj_transform,
+        sh_degree=0, campos=viewpoint_camera.camera_center,
+        prefiltered=False, debug=pipe.debug, antialiasing=pipe.antialiasing)
+    covariance = pc.get_covariance(scaling_modifier) if pipe.compute_cov3D_python else None
+    ids, weights = rasterize_contributors(pc.get_xyz, pc.get_opacity,
+        pc.get_scaling, pc.get_rotation, settings, covariance)
+    return {"gaussian_ids": ids, "weights": weights}
